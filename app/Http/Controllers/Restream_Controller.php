@@ -49,7 +49,7 @@ class Restream_Controller extends BaseController
             $now = $now->toDateTimeString();
             // if ($exp < $now){
             $exp = Carbon::now()->addMinutes(1);
-            // $exp = Carbon::now()->addDays(7);
+            //$exp = Carbon::now()->addDays(7);
             $exp = $exp->toDateTimeString();
             DB::table('restream')
             ->where('restream.rtsp_url','=', $url_rtsp)
@@ -60,8 +60,8 @@ class Restream_Controller extends BaseController
         } else {
             // 'live_url' => $url .':7466/live/'. $this->genStreamKey() . '.m3u8',
             $id_stream = $this->autoID();
-            $exp = Carbon::now()->addMinutes(1);
-            // $exp = Carbon::now()->addDays(7);
+            $exp = Carbon::now()->addMinute(1);
+            //$exp = Carbon::now()->addDays(7);
             $exp = $exp->toDateTimeString();
             DB::table('restream')
             ->insert([
