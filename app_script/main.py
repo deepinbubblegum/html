@@ -13,17 +13,27 @@ def thread_stream(id_stream, rtsp_url, live_url, key):
         print('Live URL: ' + live_url)
         print('Key: ' + key)
         print("StreamingTask is running")
-        ffcmd = f"ffmpeg -an -rtsp_transport tcp -stimeout -1 -i {rtsp_url} -reconnect 1 -reconnect_at_eof 1 -reconnect_delay_max 4294 -reconnect_streamed 1 -tune zerolatency -vcodec libx264 -pix_fmt + -c:v copy -f flv rtmp://127.0.0.1/live/{live_url}?API_KEY={key}"
+        ffcmd = f"ffmpeg -an -rtsp_transport tcp -stimeout 3000 -y -i {rtsp_url} -reconnect 1 -reconnect_at_eof 1 -reconnect_delay_max 4294 -reconnect_streamed 1 -tune zerolatency -vcodec libx264 -pix_fmt + -c:v copy -f flv rtmp://127.0.0.1/live/{live_url}?API_KEY={key}"
+        print(ffcmd)
         cmd = ffcmd.split()
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
-        for line in process.stdout:
+        while process.poll() is None:
+            sleep(0.01)
+            line = process.stdout.readline()
             print(line, end='')
-            if id_stream not in stream_is_runing:
+            if process.poll() is not None:
+                print('RTSP timeout: ' + id_stream)
+                
+            if id_stream not in stream_is_runing or process.poll() is not None:
                 print('Stop Stream: ' + id_stream)
                 threading_streams.pop(id_stream, None)
                 subprocess.Popen.kill(process)
+                stream_is_runing.remove(id_stream)
                 break
-        sleep(0.25)
+        # threading_streams.pop(id_stream, None)
+        # subprocess.Popen.kill(process)
+        # stream_is_runing.remove(id_stream)
+        sleep(0.01)
     except:
         print('error restreaming')
             
@@ -42,8 +52,8 @@ def main():
                 stream_is_runing.remove(x[0])
             except:
                 pass
-            sleep(0.2)
-        sleep(0.2)
+            sleep(0.1)
+        sleep(0.1)
         db_cursor.close()
         
         db_conn = DatabaseConn().DB_CONN
@@ -53,8 +63,8 @@ def main():
         for x in result_streaming:
             stream_state[x[0]] = True
             stream_store[x[0]] = x
-            sleep(0.2)
-        sleep(0.2)
+            sleep(0.1)
+        sleep(0.1)
         db_cursor.close()
         
         # print(stream_store['SID-000001'])
@@ -66,8 +76,8 @@ def main():
                     threading_streams[key] = threading.Thread(target=thread_stream, args=(key, stream_store[key][1], stream_store[key][2], stream_store[key][3]))
                     threading_streams[key].daemon = True
                     threading_streams[key].start()
-            sleep(0.2)
-        sleep(0.2)
+            sleep(0.1)
+        sleep(0.1)
 if __name__ == '__main__':
     main()
     
